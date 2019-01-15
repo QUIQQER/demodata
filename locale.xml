@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <locales>
-  <groups name="quiqqer/demodata" datatype="php,js">
-    <locale name="package.title">
-      <de><![CDATA[QUIQQER Demodaten]]></de>
-      <en><![CDATA[QUIQQER Demodata]]></en>
-    </locale>
-  <locale name="package.description"><de><![CDATA[Erlaubt es anderen Modulen wie Templates Demodaten an QUIQQER zu übergeben]]></de><en><![CDATA[Allows other modules like templates to provide demodata]]></en></locale></groups>
+    <groups name="quiqqer/demodata" datatype="php,js">
+        <locale name="package.title">
+            <de><![CDATA[QUIQQER Demodaten]]></de>
+            <en><![CDATA[QUIQQER Demodata]]></en>
+        </locale>
+        <locale name="package.description">
+            <de><![CDATA[Erlaubt es anderen Modulen wie Templates Demodaten an QUIQQER zu übergeben]]></de>
+            <en><![CDATA[Allows other modules like templates to provide demodata]]></en>
+        </locale>
+    </groups>
+    <groups name="quiqqer/demodata" datatype="php">
+        <!-- Exceptions-->
+        <locale name="exception.file.format.extension.unknown">
+            <de>
+                <![CDATA[Die angegebene Demodaten Datei hat eine unbekannte Dateiendung und kann nicht geparst werden]]></de>
+            <en><![CDATA[The given demodata file has an unknown file extension and can not be parsed]]></en>
+        </locale>
+    </groups>
 </locales>
