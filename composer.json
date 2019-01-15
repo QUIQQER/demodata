@@ -1,0 +1,28 @@
+{
+    "name" : "quiqqer/demodata",
+    "type" : "quiqqer-module",
+    "description" : "Adds an API to add demodata on project creation.",
+    "version" : "dev-dev",
+    "license" : "GPL-3.0+",
+    "authors" : [
+        {
+            "name": "Florian Bogner",
+            "email": "f.bogner@pcsg.de",
+            "homepage": "http://www.pcsg.de",
+            "role": "Developer"
+        }
+    ],
+    "support" : {
+        "email": "support@pcsg.de",
+        "url": "http://www.pcsg.de"
+    },
+    "require": {
+        
+    }
+    ,"autoload": {
+  "psr-4": {
+      "QUI\\Demodata\\": "src/QUI/Demodata"
+   }
+}
+
+}
