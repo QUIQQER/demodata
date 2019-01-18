@@ -2,16 +2,15 @@
 
 namespace QUI\Demodata\Parser\XML;
 
-
-
 use QUI\Utils\Text\XML;
 
 class ProjectParser
 {
     /**
      * Parses the project nodes in the given XML file
+     *
      * @param $filePath - Absolute file path to the XML file.
-     * 
+     *
      * @return array
      */
     public static function parseProjects($filePath)
@@ -53,6 +52,7 @@ class ProjectParser
      *  'setting2' => 'value',
      * ]
      * ```
+     *
      * @param \DOMNode $SettingsNode
      *
      * @return array
@@ -91,6 +91,7 @@ class ProjectParser
      *   ]
      * ]
      * ```
+     *
      * @param \DOMNode $SiteNode
      *
      * @return array
@@ -120,6 +121,50 @@ class ProjectParser
                         continue;
                     }
                     $site['children'][] = self::parseSite($ChildSiteNode);
+                }
+            }
+
+            // Parse Bricks
+
+            if ($childNode->nodeName === 'bricks') {
+                $site['bricks'] = [];
+                /** @var \DOMNode $AreaNode */
+                foreach ($childNode->childNodes as $AreaNode) {
+                    if ($AreaNode->nodeName !== 'area') {
+                        continue;
+                    }
+
+                    $areaName = $AreaNode->attributes->getNamedItem('type')->nodeValue;
+                    /** @var \DOMNode $BrickNode */
+                    foreach ($AreaNode->childNodes as $BrickNode) {
+                        if ($BrickNode->nodeName !== 'brick') {
+                            continue;
+                        }
+
+                        $brick = [];
+
+                        $brick['identifier'] = $BrickNode->attributes->getNamedItem('identifier')->nodeValue;
+
+                        $brick['settings'] = [];
+                        /** @var \DOMNode $AttributesNode */
+                        foreach ($BrickNode->childNodes as $AttributesNode) {
+                            if ($AttributesNode->nodeName !== 'attributes') {
+                                continue;
+                            }
+
+                            foreach ($AttributesNode->childNodes as $AttributeNode) {
+                                if ($AttributeNode->nodeName !== 'attribute') {
+                                    continue;
+                                }
+
+                                if($AttributeNode->attributes->getNamedItem('name')->nodeValue === 'settings'){
+                                    $brick['settings'] = json_decode($AttributeNode->nodeValue,true);
+                                }
+                            }
+                        }
+
+                        $site['bricks'][$areaName][] = $brick;
+                    }
                 }
             }
         }

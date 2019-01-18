@@ -17,5 +17,9 @@
                 <![CDATA[Die angegebene Demodaten Datei hat eine unbekannte Dateiendung und kann nicht geparst werden]]></de>
             <en><![CDATA[The given demodata file has an unknown file extension and can not be parsed]]></en>
         </locale>
+        <locale name="exception.template.unsupported">
+            <de><![CDATA[Das ausgewählte Template unterstützt keine DemoDaten]]></de>
+            <en><![CDATA[The selected template does not support demodata]]></en>
+        </locale>
     </groups>
 </locales>

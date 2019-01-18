@@ -17,6 +17,7 @@ class DemoDataParser
      *  'projects' => array,
      * ]
      * ```
+     *
      * @param $filePath
      *
      * @return array
@@ -40,7 +41,7 @@ class DemoDataParser
     }
 
     /**
-     * Attempts to parse the given XML file. 
+     * Attempts to parse the given XML file.
      * **Returnformat:**
      * ```
      * [
@@ -48,6 +49,7 @@ class DemoDataParser
      *  'projects' => array,
      * ]
      * ```
+     *
      * @param $filePath
      *
      * @return array
