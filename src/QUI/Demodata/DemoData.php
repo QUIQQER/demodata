@@ -11,7 +11,7 @@ class DemoData
 {
 
     protected $brickIdentifiers = [];
-    
+
     /**
      * Applies the given demodata to the project
      *
@@ -39,7 +39,7 @@ class DemoData
      *
      * @throws \QUI\Exception
      */
-    public function configureProject(Project $Project, $projectData)
+    protected function configureProject(Project $Project, $projectData)
     {
         $sites    = $projectData['sites'];
         $settings = $projectData['settings'];
@@ -51,9 +51,8 @@ class DemoData
         }
         $ProjectsConfig->save();
 
-        // Create the pages
-        foreach ($sites as $siteData) {
-            $this->createSite($Project->firstChild(), $siteData,$this->brickIdentifiers);
+        if (isset($sites[0])) {
+            $this->configureStartpage($Project, $sites[0]);
         }
     }
 
@@ -66,7 +65,7 @@ class DemoData
      * @return array
      * @throws \QUI\Exception
      */
-    public function addBricks(Project $Project, $bricksData)
+    protected function addBricks(Project $Project, $bricksData)
     {
         $BrickManager  = Manager::init();
         $createdBricks = [];
@@ -86,8 +85,7 @@ class DemoData
             // Set the bricks settings
             $Brick->setSettings($brickParams['settings']);
 
-
-            $brickParams['customfields'] = json_decode($brickParams['attributes']['customfields'],true);
+            $brickParams['customfields'] = json_decode($brickParams['attributes']['customfields'], true);
             $BrickManager->saveBrick($brickID, $brickParams);
             $createdBricks[$brickIdentifier] = $brickID;
         }
@@ -101,11 +99,10 @@ class DemoData
      * @param Site $Parent
      * @param $siteData
      *
-     * @param array $brickIdentifers
      *
      * @throws \QUI\Exception
      */
-    protected function createSite(Site $Parent, $siteData, $brickIdentifers=[])
+    protected function createSite(Site $Parent, $siteData)
     {
         $EditSite  = $Parent->getEdit();
         $newSiteID = $EditSite->createChild(
@@ -127,17 +124,17 @@ class DemoData
         // Add bricks to the site
         if (isset($siteData['bricks']) && !empty($siteData['bricks'])) {
             $siteBricks = [];
-            foreach($siteData['bricks'] as $areaName => $areaBricks){
-                
-                foreach($areaBricks as $brickData){
-                    if(!isset($this->brickIdentifiers[$brickData['identifier']])){
+            foreach ($siteData['bricks'] as $areaName => $areaBricks) {
+
+                foreach ($areaBricks as $brickData) {
+                    if (!isset($this->brickIdentifiers[$brickData['identifier']])) {
                         continue;
                     }
-                    
+
                     $siteBricks[$areaName][] = [
-                        'brickId' => $this->brickIdentifiers[$brickData['identifier']],
+                        'brickId'      => $this->brickIdentifiers[$brickData['identifier']],
                         'customfields' => json_encode($brickData['settings']),
-                        'uid' => ''
+                        'uid'          => ''
                     ];
                 }
             }
@@ -149,5 +146,50 @@ class DemoData
             $NewSite->save(\QUI::getUsers()->getSystemUser());
         }
 
+    }
+
+    protected function configureStartpage(Project $Project, $siteData)
+    {
+        $Site = $Project->firstChild();
+        $Site = $Site->getEdit();
+
+        // Create children
+        if (isset($siteData['children']) && !empty($siteData['children'])) {
+            foreach ($siteData['children'] as $childData) {
+                $this->createSite($Project->firstChild(), $childData);
+            }
+        }
+
+        if (isset($siteData['attributes'])) {
+            foreach ($siteData['attributes'] as $attribute => $value) {
+                $Site->setAttribute($attribute, $value);
+            }
+            $Site->save(\QUI::getUsers()->getSystemUser());
+        }
+
+        // Add bricks to the site
+        if (isset($siteData['bricks']) && !empty($siteData['bricks'])) {
+            $siteBricks = [];
+            foreach ($siteData['bricks'] as $areaName => $areaBricks) {
+
+                foreach ($areaBricks as $brickData) {
+                    if (!isset($this->brickIdentifiers[$brickData['identifier']])) {
+                        continue;
+                    }
+
+                    $siteBricks[$areaName][] = [
+                        'brickId'      => $this->brickIdentifiers[$brickData['identifier']],
+                        'customfields' => json_encode($brickData['settings']),
+                        'uid'          => ''
+                    ];
+                }
+            }
+
+            $Site->setAttribute(
+                'quiqqer.bricks.areas',
+                json_encode($siteBricks)
+            );
+            $Site->save(\QUI::getUsers()->getSystemUser());
+        }
     }
 }
