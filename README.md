@@ -17,12 +17,16 @@ Installation
 
 Der Paketname ist: quiqqer/demodata
 
+```
+    php composer.phar require quiqqer/demodata
+```
+
 
 Mitwirken
 ----------
 
-- Issue Tracker: 
-- Source Code: 
+- Issue Tracker:  https://dev.quiqqer.com/quiqqer/demodata/issues
+- Source Code: https://dev.quiqqer.com/quiqqer/demodata/
 
 
 Support
@@ -35,6 +39,8 @@ senden Sie bitte eine E-Mail an support@pcsg.de.
 Lizenz
 -------
 
-
 Entwickler
---------
+-------
+https://dev.quiqqer.com/quiqqer/demodata/wikis/home
+
+
