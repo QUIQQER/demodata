@@ -225,14 +225,15 @@ class DemoData
             $updatedSiteBricks = [];
             foreach ($siteBricks as $brickArea => $bricks) {
                 foreach ($bricks as $brickData) {
-                    $brickSettings = json_decode($brickData['customfields'], true);
+                    $brickSettings     = json_decode($brickData['customfields'], true);
+                    $updatedSettings = [];
                     foreach ($brickSettings as $settingName => $settingValue) {
-                        $brickSettings[$settingName] = $this->replacePlaceholder($settingValue);
+                        $updatedSettings[] = $this->replacePlaceholder($settingValue);
                     }
-                    $updatedSiteBricks[$brickArea][] = $brickSettings;
+                    $updatedSiteBricks[$brickArea][] = $updatedSettings;
                 }
             }
-            
+
             $Site->setAttribute('quiqqer.bricks.areas', json_encode($updatedSiteBricks));
             $Site->save();
         }
@@ -245,12 +246,12 @@ class DemoData
      *
      * @return string
      */
-    public function replacePlaceholder($string)
+    protected function replacePlaceholder($string)
     {
         $placeholderPattern = [
             '/.*\$\{(site).([a-zA-Z0-9\.-_]+)\}.*/'
         ];
-        
+
         if (is_array($string)) {
             $string = json_encode($string);
         }
@@ -268,7 +269,7 @@ class DemoData
             $identifier = $matches[2];
 
             switch ($type) {
-                case 'page':
+                case 'site':
                     if (isset($this->identifiers['sites'][$identifier])) {
                         $string = str_replace(
                             '${site.'.$identifier.'}',
