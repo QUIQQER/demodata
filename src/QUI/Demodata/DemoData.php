@@ -10,7 +10,13 @@ use QUI\Projects\Site;
 class DemoData
 {
 
-    protected $brickIdentifiers = [];
+    protected $identifiers = [
+        'sites'  => [],
+        'bricks' => []
+    ];
+
+    /** @var Project */
+    protected $Project;
 
     /**
      * Applies the given demodata to the project
@@ -23,12 +29,15 @@ class DemoData
     public function apply(Project $Project, $demoDataArray)
     {
         if (isset($demoDataArray['bricks'])) {
-            $this->brickIdentifiers = $this->addBricks($Project, $demoDataArray['bricks']);
+            $this->identifiers['bricks'] = $this->addBricks($Project, $demoDataArray['bricks']);
         }
 
+        // Set the project settings and create its children sites
         if (isset($demoDataArray['projects'])) {
-            $this->configureProject($Project, $demoDataArray['projects'][0]);
+            $this->Project = $this->configureProject($Project, $demoDataArray['projects'][0]);
         }
+
+        $this->replaceBrickSettingPlaceholders();
     }
 
     /**
@@ -37,6 +46,7 @@ class DemoData
      * @param Project $Project
      * @param $projectData
      *
+     * @return Project
      * @throws \QUI\Exception
      */
     protected function configureProject(Project $Project, $projectData)
@@ -51,9 +61,14 @@ class DemoData
         }
         $ProjectsConfig->save();
 
-        if (isset($sites[0])) {
-            $this->configureStartpage($Project, $sites[0]);
+        if (count($sites) > 0) {
+            $identifier                              = array_keys($sites)[0];
+            $this->identifiers['sites'][$identifier] = $this->configureStartpage($Project, reset($sites));
         }
+
+        $this->Project = $Project;
+
+        return $Project;
     }
 
     /**
@@ -100,6 +115,7 @@ class DemoData
      * @param $siteData
      *
      *
+     * @return int - Returns the created sites ID
      * @throws \QUI\Exception
      */
     protected function createSite(Site $Parent, $siteData)
@@ -116,38 +132,28 @@ class DemoData
 
         // Create children
         if (isset($siteData['children']) && !empty($siteData['children'])) {
-            foreach ($siteData['children'] as $childData) {
-                $this->createSite($NewSite, $childData);
+            foreach ($siteData['children'] as $identifier => $childData) {
+                $this->identifiers['sites'][$identifier] = $this->createSite($NewSite, $childData);
             }
         }
 
         // Add bricks to the site
         if (isset($siteData['bricks']) && !empty($siteData['bricks'])) {
-            $siteBricks = [];
-            foreach ($siteData['bricks'] as $areaName => $areaBricks) {
-
-                foreach ($areaBricks as $brickData) {
-                    if (!isset($this->brickIdentifiers[$brickData['identifier']])) {
-                        continue;
-                    }
-
-                    $siteBricks[$areaName][] = [
-                        'brickId'      => $this->brickIdentifiers[$brickData['identifier']],
-                        'customfields' => json_encode($brickData['settings']),
-                        'uid'          => ''
-                    ];
-                }
-            }
-
-            $NewSite->setAttribute(
-                'quiqqer.bricks.areas',
-                json_encode($siteBricks)
-            );
-            $NewSite->save(\QUI::getUsers()->getSystemUser());
+            $this->addBrickToSite($NewSite, $siteData['bricks']);
         }
 
+        return $newSiteID;
     }
 
+    /**
+     * Creates and configures the start page
+     *
+     * @param Project $Project
+     * @param $siteData
+     *
+     * @return bool|int
+     * @throws \QUI\Exception
+     */
     protected function configureStartpage(Project $Project, $siteData)
     {
         $Site = $Project->firstChild();
@@ -155,8 +161,8 @@ class DemoData
 
         // Create children
         if (isset($siteData['children']) && !empty($siteData['children'])) {
-            foreach ($siteData['children'] as $childData) {
-                $this->createSite($Project->firstChild(), $childData);
+            foreach ($siteData['children'] as $identifier => $childData) {
+                $this->identifiers['sites'][$identifier] = $this->createSite($Project->firstChild(), $childData);
             }
         }
 
@@ -169,27 +175,111 @@ class DemoData
 
         // Add bricks to the site
         if (isset($siteData['bricks']) && !empty($siteData['bricks'])) {
-            $siteBricks = [];
-            foreach ($siteData['bricks'] as $areaName => $areaBricks) {
+            $this->addBrickToSite($Site, $siteData['bricks']);
+        }
 
-                foreach ($areaBricks as $brickData) {
-                    if (!isset($this->brickIdentifiers[$brickData['identifier']])) {
-                        continue;
+        return $Site->getId();
+    }
+
+    /**
+     * Adds the given bricks to the given site
+     *
+     * @param Site $Site
+     * @param $bricksData
+     */
+    protected function addBrickToSite($Site, $bricksData)
+    {
+        $siteBricks = [];
+        foreach ($bricksData as $areaName => $areaBricks) {
+            foreach ($areaBricks as $brickData) {
+                if (!isset($this->identifiers['bricks'][$brickData['identifier']])) {
+                    continue;
+                }
+
+                $siteBricks[$areaName][] = [
+                    'brickId'      => $this->identifiers['bricks'][$brickData['identifier']],
+                    'customfields' => json_encode($brickData['settings']),
+                    'uid'          => ''
+                ];
+            }
+        }
+
+        $Site->setAttribute(
+            'quiqqer.bricks.areas',
+            json_encode($siteBricks)
+        );
+        $Site->save(\QUI::getUsers()->getSystemUser());
+    }
+
+    /**
+     * Replaces all placeholders within the bricks settings
+     */
+    protected function replaceBrickSettingPlaceholders()
+    {
+        /** @var Site\Edit $Site */
+        foreach ($this->Project->getSites() as $Site) {
+            $siteBricks = json_decode($Site->getAttribute('quiqqer.bricks.areas'), true);
+            if (empty($siteBricks)) {
+                continue;
+            }
+            $updatedSiteBricks = [];
+            foreach ($siteBricks as $brickArea => $bricks) {
+                foreach ($bricks as $brickData) {
+                    $brickSettings = json_decode($brickData['customfields'], true);
+                    foreach ($brickSettings as $settingName => $settingValue) {
+                        $brickSettings[$settingName] = $this->replacePlaceholder($settingValue);
                     }
-
-                    $siteBricks[$areaName][] = [
-                        'brickId'      => $this->brickIdentifiers[$brickData['identifier']],
-                        'customfields' => json_encode($brickData['settings']),
-                        'uid'          => ''
-                    ];
+                    $updatedSiteBricks[$brickArea][] = $brickSettings;
                 }
             }
-
-            $Site->setAttribute(
-                'quiqqer.bricks.areas',
-                json_encode($siteBricks)
-            );
-            $Site->save(\QUI::getUsers()->getSystemUser());
+            
+            $Site->setAttribute('quiqqer.bricks.areas', json_encode($updatedSiteBricks));
+            $Site->save();
         }
+    }
+
+    /**
+     * Replaces all placeholders within the given string.
+     *
+     * @param string|array $string
+     *
+     * @return string
+     */
+    public function replacePlaceholder($string)
+    {
+        $placeholderPattern = [
+            '/.*\$\{(site).([a-zA-Z0-9\.-_]+)\}.*/'
+        ];
+        
+        if (is_array($string)) {
+            $string = json_encode($string);
+        }
+
+        foreach ($placeholderPattern as $pattern) {
+            if (!preg_match($pattern, $string, $matches)) {
+                continue;
+            }
+
+            if (count($matches) !== 3) {
+                continue;
+            }
+
+            $type       = $matches[1];
+            $identifier = $matches[2];
+
+            switch ($type) {
+                case 'page':
+                    if (isset($this->identifiers['sites'][$identifier])) {
+                        $string = str_replace(
+                            '${site.'.$identifier.'}',
+                            $this->identifiers['sites'][$identifier],
+                            $string
+                        );
+                    }
+                    break;
+            }
+        }
+
+        return $string;
     }
 }

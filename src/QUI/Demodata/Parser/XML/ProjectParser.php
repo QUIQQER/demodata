@@ -32,7 +32,9 @@ class ProjectParser
                         if ($siteNode->nodeName !== 'site') {
                             continue;
                         }
-                        $project['sites'][] = self::parseSite($siteNode);
+
+                        $identifier = $siteNode->attributes->getNamedItem('identifier')->nodeValue;
+                        $project['sites'][$identifier] = self::parseSite($siteNode);
                     }
                 }
             }
@@ -120,7 +122,8 @@ class ProjectParser
                     if ($ChildSiteNode->nodeName !== 'site') {
                         continue;
                     }
-                    $site['children'][] = self::parseSite($ChildSiteNode);
+                    $identifier = $ChildSiteNode->attributes->getNamedItem('identifier')->nodeValue;
+                    $site['children'][$identifier] = self::parseSite($ChildSiteNode);
                 }
             }
 
@@ -157,8 +160,8 @@ class ProjectParser
                                     continue;
                                 }
 
-                                if($AttributeNode->attributes->getNamedItem('name')->nodeValue === 'settings'){
-                                    $brick['settings'] = json_decode($AttributeNode->nodeValue,true);
+                                if ($AttributeNode->attributes->getNamedItem('name')->nodeValue === 'settings') {
+                                    $brick['settings'] = json_decode($AttributeNode->nodeValue, true);
                                 }
                             }
                         }
