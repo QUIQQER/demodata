@@ -60,6 +60,9 @@ class DemoData
             $ProjectsConfig->set($Project->getName(), $key, $value);
         }
         $ProjectsConfig->save();
+        // Workaround to force the project manager to reload the project data
+        unset(\QUI\Projects\Manager::$projects[$Project->getName()]);
+        
 
         if (count($sites) > 0) {
             $identifier                              = array_keys($sites)[0];
@@ -216,6 +219,26 @@ class DemoData
      */
     protected function replaceBrickSettingPlaceholders()
     {
+        
+        /*
+         * Global brick settings
+         */
+        $BrickManager = new Manager();
+        $Bricks = $BrickManager->getBricksFromProject($this->Project);
+        /** @var Brick $Brick */
+        foreach ($Bricks as $Brick) {
+            $updatedSettings = [];
+            foreach ($Brick->getSettings() as $settingName => $settingValue) {
+                $updatedSettings[$settingName] = $this->processPlaceholders($settingValue);
+            }
+            $Brick->setSettings($updatedSettings);
+            $BrickManager->saveBrick($Brick->getAttribute('id'), $Brick->getAttributes());
+        }
+        
+        /*
+         * Site specific settings
+         */
+        
         /** @var Site\Edit $Site */
         foreach ($this->Project->getSites() as $Site) {
             $siteBricks = json_decode($Site->getAttribute('quiqqer.bricks.areas'), true);
@@ -228,7 +251,7 @@ class DemoData
                     $brickSettings     = json_decode($brickData['customfields'], true);
                     $updatedSettings = [];
                     foreach ($brickSettings as $settingName => $settingValue) {
-                        $updatedSettings[] = $this->replacePlaceholder($settingValue);
+                        $updatedSettings[] = $this->processPlaceholders($settingValue);
                     }
                     $updatedSiteBricks[$brickArea][] = $updatedSettings;
                 }
@@ -246,7 +269,7 @@ class DemoData
      *
      * @return string
      */
-    protected function replacePlaceholder($string)
+    protected function processPlaceholders($string)
     {
         $placeholderPattern = [
             '/.*\$\{(site).([a-zA-Z0-9\.-_]+)\}.*/'

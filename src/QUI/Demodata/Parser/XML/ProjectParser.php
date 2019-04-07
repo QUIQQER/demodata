@@ -28,18 +28,25 @@ class ProjectParser
                 }
 
                 if ($childNode->nodeName === 'sites') {
+                    /** @var \DOMElement $siteNode */
                     foreach ($childNode->childNodes as $siteNode) {
                         if ($siteNode->nodeName !== 'site') {
                             continue;
                         }
 
-                        $identifier = $siteNode->attributes->getNamedItem('identifier')->nodeValue;
+                        if ($siteNode->hasAttribute('identifier')) {
+                            $identifier = $siteNode->attributes->getNamedItem('identifier')->nodeValue;
+                        } else {
+                            // Workaround: Random identifier with microtime.
+                            $identifier = mt_rand(0, 250000).microtime();
+                        }
+
                         $project['sites'][$identifier] = self::parseSite($siteNode);
                     }
                 }
             }
-            $projects[] = $project;
         }
+        $projects[] = $project;
 
         return $projects;
     }
@@ -118,11 +125,19 @@ class ProjectParser
 
             // Parse Children
             if ($childNode->nodeName === 'children') {
+                /** @var \DOMElement $ChildSiteNode */
                 foreach ($childNode->childNodes as $ChildSiteNode) {
                     if ($ChildSiteNode->nodeName !== 'site') {
                         continue;
                     }
-                    $identifier = $ChildSiteNode->attributes->getNamedItem('identifier')->nodeValue;
+
+                    if ($ChildSiteNode->hasAttribute('identifier')) {
+                        $identifier = $ChildSiteNode->attributes->getNamedItem('identifier')->nodeValue;
+                    } else {
+                        // Workaround: Random identifier with microtime.
+                        $identifier = mt_rand(0, 250000).microtime();
+                    }
+                    
                     $site['children'][$identifier] = self::parseSite($ChildSiteNode);
                 }
             }
