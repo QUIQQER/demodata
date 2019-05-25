@@ -44,6 +44,10 @@ class ProjectParser
                         $project['sites'][$identifier] = self::parseSite($siteNode);
                     }
                 }
+
+                if ($childNode->nodeName === 'media') {
+                    $project['media'] = self::parseMedia($childNode);
+                }
             }
         }
         $projects[] = $project;
@@ -137,7 +141,7 @@ class ProjectParser
                         // Workaround: Random identifier with microtime.
                         $identifier = mt_rand(0, 250000).microtime();
                     }
-                    
+
                     $site['children'][$identifier] = self::parseSite($ChildSiteNode);
                 }
             }
@@ -188,5 +192,49 @@ class ProjectParser
         }
 
         return $site;
+    }
+
+    /**
+     * Parses the media section within a project node. <br />  
+     * If one of the file properites is not defined, an empty string will be used for this property.  <br />  
+     * The following properties are required: 'title' <br />  
+     * Returns an array with all file and their settings with the path within the bin/media directory as array key  
+     * 
+     * **Returnformat**
+     * ```
+     * [
+     *  '<path_within_media_dir>' => [
+     *      'name' => '<name>',
+     *      'title' => '<title>',
+     *      'description' => '<description>',
+     *      'alt' => '<alt>',
+     *      'priority' => '<priority>',
+     *  ]
+     * ]
+     * ```
+     * 
+     * @param \DOMNode $MediaNode
+     *
+     * @return array
+     */
+    protected static function parseMedia(\DOMNode $MediaNode)
+    {
+        $media = [];
+
+        $simpleXML = simplexml_import_dom($MediaNode);
+
+        foreach ($simpleXML->file as $fileNode) {
+            $mediaPath = (string)$fileNode->attributes()['path'];
+            $mediaData  = [
+                'name'        => isset($fileNode->name) ? (string)$fileNode->name : '',
+                'title'       => (string)$fileNode->title,
+                'description' => isset($fileNode->description) ? (string)$fileNode->description : '',
+                'alt'         => isset($fileNode->alt) ? (string)$fileNode->alt : '',
+                'priority'    => isset($fileNode->priority) ? (int)$fileNode->priority : 0,
+            ];
+            $media[$mediaPath] = $mediaData;
+        }
+
+        return $media;
     }
 }

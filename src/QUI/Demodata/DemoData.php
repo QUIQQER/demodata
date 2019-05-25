@@ -12,7 +12,7 @@ class DemoData
 
     protected $identifiers = [
         'sites'  => [],
-        'bricks' => []
+        'bricks' => [],
     ];
 
     /** @var Project */
@@ -32,6 +32,12 @@ class DemoData
             $this->identifiers['bricks'] = $this->addBricks($Project, $demoDataArray['bricks']);
         }
 
+        // Create media area
+        if(isset($demoDataArray['projects'][0]['media']) && !empty($demoDataArray['projects'][0]['media'])){
+            $Media = new Media();
+            $createdMedia = $Media->createMediaArea($Project, $demoDataArray);
+        }
+        
         // Set the project settings and create its children sites
         if (isset($demoDataArray['projects'])) {
             $this->Project = $this->configureProject($Project, $demoDataArray['projects'][0]);
@@ -51,8 +57,9 @@ class DemoData
      */
     protected function configureProject(Project $Project, $projectData)
     {
-        $sites    = $projectData['sites'];
-        $settings = $projectData['settings'];
+        $sites     = $projectData['sites'];
+        $settings  = $projectData['settings'];
+        $mediaData = isset($projectData['media']) ? $projectData['media'] : [];
 
         // Set the settings
         $ProjectsConfig = \QUI::getConfig('etc/projects.ini.php');
@@ -62,13 +69,12 @@ class DemoData
         $ProjectsConfig->save();
         // Workaround to force the project manager to reload the project data
         unset(\QUI\Projects\Manager::$projects[$Project->getName()]);
-        
 
         if (count($sites) > 0) {
             $identifier                              = array_keys($sites)[0];
             $this->identifiers['sites'][$identifier] = $this->configureStartpage($Project, reset($sites));
         }
-
+        
         $this->Project = $Project;
 
         return $Project;
@@ -219,12 +225,12 @@ class DemoData
      */
     protected function replaceBrickSettingPlaceholders()
     {
-        
+
         /*
          * Global brick settings
          */
         $BrickManager = new Manager();
-        $Bricks = $BrickManager->getBricksFromProject($this->Project);
+        $Bricks       = $BrickManager->getBricksFromProject($this->Project);
         /** @var Brick $Brick */
         foreach ($Bricks as $Brick) {
             $updatedSettings = [];
@@ -234,11 +240,11 @@ class DemoData
             $Brick->setSettings($updatedSettings);
             $BrickManager->saveBrick($Brick->getAttribute('id'), $Brick->getAttributes());
         }
-        
+
         /*
          * Site specific settings
          */
-        
+
         /** @var Site\Edit $Site */
         foreach ($this->Project->getSites() as $Site) {
             $siteBricks = json_decode($Site->getAttribute('quiqqer.bricks.areas'), true);
@@ -248,7 +254,7 @@ class DemoData
             $updatedSiteBricks = [];
             foreach ($siteBricks as $brickArea => $bricks) {
                 foreach ($bricks as $brickData) {
-                    $brickSettings     = json_decode($brickData['customfields'], true);
+                    $brickSettings   = json_decode($brickData['customfields'], true);
                     $updatedSettings = [];
                     foreach ($brickSettings as $settingName => $settingValue) {
                         $updatedSettings[] = $this->processPlaceholders($settingValue);
@@ -272,7 +278,7 @@ class DemoData
     protected function processPlaceholders($string)
     {
         $placeholderPattern = [
-            '/.*\$\{(site).([a-zA-Z0-9\.-_]+)\}.*/'
+            '/.*\$\{(site\.)([a-zA-Z0-9\.-_]+)\}.*/',
         ];
 
         if (is_array($string)) {
@@ -292,7 +298,7 @@ class DemoData
             $identifier = $matches[2];
 
             switch ($type) {
-                case 'site':
+                case 'site.':
                     if (isset($this->identifiers['sites'][$identifier])) {
                         $string = str_replace(
                             '${site.'.$identifier.'}',
