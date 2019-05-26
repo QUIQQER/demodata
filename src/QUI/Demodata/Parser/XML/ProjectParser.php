@@ -38,7 +38,7 @@ class ProjectParser
                             $identifier = $siteNode->attributes->getNamedItem('identifier')->nodeValue;
                         } else {
                             // Workaround: Random identifier with microtime.
-                            $identifier = mt_rand(0, 250000).microtime();
+                            $identifier = mt_rand(0, 250000).str_replace(' ','',microtime());
                         }
 
                         $project['sites'][$identifier] = self::parseSite($siteNode);
@@ -139,7 +139,7 @@ class ProjectParser
                         $identifier = $ChildSiteNode->attributes->getNamedItem('identifier')->nodeValue;
                     } else {
                         // Workaround: Random identifier with microtime.
-                        $identifier = mt_rand(0, 250000).microtime();
+                        $identifier = mt_rand(0, 250000).str_replace(' ','',microtime());
                     }
 
                     $site['children'][$identifier] = self::parseSite($ChildSiteNode);
@@ -225,6 +225,7 @@ class ProjectParser
 
         foreach ($simpleXML->file as $fileNode) {
             $mediaPath = (string)$fileNode->attributes()['path'];
+            $mediaPath = trim($mediaPath,' \t\n\r\0\x0B/');
             $mediaData  = [
                 'name'        => isset($fileNode->name) ? (string)$fileNode->name : '',
                 'title'       => (string)$fileNode->title,

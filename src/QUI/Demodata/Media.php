@@ -3,6 +3,7 @@
 namespace QUI\Demodata;
 
 use QUI\Projects\Media\Folder;
+use QUI\Projects\Media\Utils;
 use QUI\Projects\Project;
 
 class Media
@@ -70,14 +71,20 @@ class Media
 
             // Upload file
             $pathInSourceDir = str_replace($this->templateMediaBinDirectory, '', $fullPath);
+            $pathInSourceDir = trim($pathInSourceDir," \t\n\r\0\x0B/");
             $UploadedFile    = $MediaBaseFolder->uploadFile($fullPath, Folder::FILE_OVERWRITE_TRUE);
+            // Sanitize the filename to make sure it does not contain any invalid characters
             if (isset($this->mediaSection[$pathInSourceDir])) {
                 $UploadedFile->setAttributes([
-                    'name'     => $this->mediaSection[$pathInSourceDir]['name'],
+                    'name'     => str_replace(
+                        '.',
+                        '_',
+                        Utils::stripMediaName($this->mediaSection[$pathInSourceDir]['name'])
+                    ),
                     'title'    => $this->mediaSection[$pathInSourceDir]['title'],
                     'alt'      => $this->mediaSection[$pathInSourceDir]['alt'],
                     'priority' => $this->mediaSection[$pathInSourceDir]['priority'],
-                    'short'    => $this->mediaSection[$pathInSourceDir]['short'],
+                    'short'    => $this->mediaSection[$pathInSourceDir]['description'],
                 ]);
             }
 
