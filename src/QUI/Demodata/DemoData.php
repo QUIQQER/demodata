@@ -269,7 +269,6 @@ class DemoData
         /*
          * Site specific settings
          */
-
         /** @var Site\Edit $Site */
         foreach ($this->Project->getSites() as $Site) {
             $siteBricks = json_decode($Site->getAttribute('quiqqer.bricks.areas'), true);
@@ -287,6 +286,33 @@ class DemoData
                     $brickData['customfields'] = $updatedSettings;
                     $updatedSiteBricks[$brickArea][] = $brickData;
                 }
+            }
+            
+            /*
+             * Brick UID Table
+             */
+            $brickUIDRows = \QUI::getDataBase()->fetch([
+                'from' => Manager::getUIDTable(),
+                'where' => [
+                    'project' => $this->Project->getName(),
+                    'lang' => $this->Project->getLang()
+                ]
+            ]);
+            
+            foreach($brickUIDRows as $brickUIDRow){
+                $customSettings = json_decode($brickUIDRow['customfields'],true);
+                foreach($customSettings as $settingName => $settingValue){
+                    $customSettings[$settingName] = $this->processPlaceholders($settingValue);
+                }
+                
+                \QUI::getDataBase()->update(
+                    Manager::getUIDTable(),
+                    [
+                        'customfields' => json_encode($customSettings)
+                    ],[
+                        'uid' => $brickUIDRow['uid']
+                    ]
+                );
             }
 
             $Site->setAttribute('quiqqer.bricks.areas', $updatedSiteBricks);
