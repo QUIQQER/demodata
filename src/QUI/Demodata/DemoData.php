@@ -46,6 +46,7 @@ class DemoData
 
         $this->replacePlaceholdersInBrickSettings();
         $this->replacePlaceholdersInSiteSettings();
+        $this->replacePlaceholdersInProjectSettings();
     }
 
     /**
@@ -336,6 +337,21 @@ class DemoData
         }
     }
 
+    /**
+     * Replaces all Placeholders within the projects settings
+     * @throws \QUI\Exception
+     */
+    protected function replacePlaceholdersInProjectSettings(){
+        
+        $ProjectsConfig = \QUI::getConfig('etc/projects.ini.php');
+        $settings = $ProjectsConfig->getSection($this->Project->getName());
+        foreach ($settings as $key => $value) {
+            $value = $this->processPlaceholders($value);
+            $ProjectsConfig->set($this->Project->getName(), $key, $value);
+        }
+        $ProjectsConfig->save();
+    }
+    
     /**
      * Replaces all placeholders within the given string.
      * If an array is given, the method will convert the array into a json string and return the updated json string
