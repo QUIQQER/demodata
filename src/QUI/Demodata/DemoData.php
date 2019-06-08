@@ -6,6 +6,7 @@ use QUI\Bricks\Brick;
 use QUI\Bricks\Manager;
 use QUI\Projects\Project;
 use QUI\Projects\Site;
+use QUI\System\Log;
 
 class DemoData
 {
@@ -385,24 +386,37 @@ class DemoData
 
                 switch ($type) {
                     case 'site.':
-                        if (isset($this->identifiers['sites'][$identifier])) {
-                            $string = str_replace(
-                                '${site.'.$identifier.'}',
-                                $this->identifiers['sites'][$identifier],
-                                $string
-                            );
+                        if (!isset($this->identifiers['sites'][$identifier])) {
+                            Log::addDebug('Site Identifier "'.$identifier.'" was not found');
+                            break;
                         }
+
+                        $string = str_replace(
+                            '${site.'.$identifier.'}',
+                            $this->identifiers['sites'][$identifier],
+                            $string
+                        );
                         break;
                     case 'site':
-                        if (isset($this->identifiers['sites'][$identifier])) {
-                            $string = str_replace(
-                                '${site:'.$identifier.'}',
-                                $this->identifiers['sites'][$identifier],
-                                $string
-                            );
+                        if (!isset($this->identifiers['sites'][$identifier])) {
+                            Log::addDebug('Site Identifier "'.$identifier.'" was not found');
+                            break;
                         }
+
+                        $string = str_replace(
+                            '${site:'.$identifier.'}',
+                            $this->identifiers['sites'][$identifier],
+                            $string
+                        );
+                        
                         break;
                     case 'media':
+                        $identifier = trim($identifier);
+                        $identifier = ltrim($identifier,'/ ');
+                        if(!isset($this->identifiers['media'][$identifier])){
+                            Log::addDebug('Media Identifier "'.$identifier.'" was not found');
+                            break;
+                        }
                         $string = str_replace(
                             '${media:'.$identifier.'}',
                             'image.php?id='.$this->identifiers['media'][$identifier].'&project='.$this->Project->getName(),
