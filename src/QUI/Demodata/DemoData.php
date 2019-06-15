@@ -82,7 +82,7 @@ class DemoData
 
         return $Project;
     }
-    
+
     //////////////////////
     //   Sites
     //////////////////////
@@ -105,7 +105,6 @@ class DemoData
             [],
             \QUI::getUsers()->getSystemUser()
         );
-        
 
         $NewSite = new Site\Edit($Parent->getProject(), $newSiteID);
         $NewSite->activate(\QUI::getUsers()->getSystemUser());
@@ -163,7 +162,7 @@ class DemoData
         return $Site->getId();
     }
     #endregion
-    
+
     //////////////////////
     //   Bricks
     //////////////////////
@@ -216,7 +215,7 @@ class DemoData
     protected function addBrickToSite($Site, $bricksData)
     {
         $BrickManager = Manager::init();
-        $siteBricks = [];
+        $siteBricks   = [];
         foreach ($bricksData as $areaName => $areaBricks) {
             foreach ($areaBricks as $brickData) {
                 if (!isset($this->identifiers['bricks'][$brickData['identifier']])) {
@@ -228,10 +227,10 @@ class DemoData
                     'customfields' => json_encode($brickData['settings']),
                     'uid'          => ''
                 ];
-                
-                $brickUid = $BrickManager->createUniqueSiteBrick($Site,$quiBrickData);
+
+                $brickUid            = $BrickManager->createUniqueSiteBrick($Site, $quiBrickData);
                 $quiBrickData['uid'] = $brickUid;
-                
+
                 $siteBricks[$areaName][] = $quiBrickData;
             }
         }
@@ -243,7 +242,7 @@ class DemoData
         $Site->save(\QUI::getUsers()->getSystemUser());
     }
     #endregion
-    
+
     //////////////////////
     //   Placeholders
     //////////////////////
@@ -285,33 +284,33 @@ class DemoData
                     foreach ($brickSettings as $settingName => $settingValue) {
                         $updatedSettings[] = $this->processPlaceholders($settingValue);
                     }
-                    $brickData['customfields'] = $updatedSettings;
+                    $brickData['customfields']       = $updatedSettings;
                     $updatedSiteBricks[$brickArea][] = $brickData;
                 }
             }
-            
+
             /*
              * Brick UID Table
              */
             $brickUIDRows = \QUI::getDataBase()->fetch([
-                'from' => Manager::getUIDTable(),
+                'from'  => Manager::getUIDTable(),
                 'where' => [
                     'project' => $this->Project->getName(),
-                    'lang' => $this->Project->getLang()
+                    'lang'    => $this->Project->getLang()
                 ]
             ]);
-            
-            foreach($brickUIDRows as $brickUIDRow){
-                $customSettings = json_decode($brickUIDRow['customfields'],true);
-                foreach($customSettings as $settingName => $settingValue){
+
+            foreach ($brickUIDRows as $brickUIDRow) {
+                $customSettings = json_decode($brickUIDRow['customfields'], true);
+                foreach ($customSettings as $settingName => $settingValue) {
                     $customSettings[$settingName] = $this->processPlaceholders($settingValue);
                 }
-                
+
                 \QUI::getDataBase()->update(
                     Manager::getUIDTable(),
                     [
                         'customfields' => json_encode($customSettings)
-                    ],[
+                    ], [
                         'uid' => $brickUIDRow['uid']
                     ]
                 );
@@ -328,9 +327,9 @@ class DemoData
     protected function replacePlaceholdersInSiteSettings()
     {
         /** @var Site\Edit $Site */
-        foreach($this->Project->getSites() as $Site){
+        foreach ($this->Project->getSites() as $Site) {
             $updatedSettings = [];
-            foreach($Site->getAttributes() as $attributeName => $attributeValue){
+            foreach ($Site->getAttributes() as $attributeName => $attributeValue) {
                 $updatedSettings[$attributeName] = $this->processPlaceholders($attributeValue);
             }
             $Site->setAttributes($updatedSettings);
@@ -340,19 +339,21 @@ class DemoData
 
     /**
      * Replaces all Placeholders within the projects settings
+     *
      * @throws \QUI\Exception
      */
-    protected function replacePlaceholdersInProjectSettings(){
-        
+    protected function replacePlaceholdersInProjectSettings()
+    {
+
         $ProjectsConfig = \QUI::getConfig('etc/projects.ini.php');
-        $settings = $ProjectsConfig->getSection($this->Project->getName());
+        $settings       = $ProjectsConfig->getSection($this->Project->getName());
         foreach ($settings as $key => $value) {
             $value = $this->processPlaceholders($value);
             $ProjectsConfig->set($this->Project->getName(), $key, $value);
         }
         $ProjectsConfig->save();
     }
-    
+
     /**
      * Replaces all placeholders within the given string.
      * If an array is given, the method will convert the array into a json string and return the updated json string
@@ -366,6 +367,7 @@ class DemoData
         $placeholderPattern = [
             '/.*\$\{(site\.)([a-zA-Z0-9\.\-_]+)\}.*/',
             '/.*\$\{(site):([a-zA-Z0-9\.\-_\/]+)\}.*/',
+            '/.*\$\{(siteurl):([a-zA-Z0-9\.\-_\/]+)\}.*/',
             '/.*\$\{(media):([a-zA-Z0-9\.\-_\/\\\\]+)\}.*/',
         ];
 
@@ -375,8 +377,8 @@ class DemoData
 
         foreach ($placeholderPattern as $pattern) {
             $matches = [];
-            
-            while(preg_match($pattern, $string, $matches)){
+
+            while (preg_match($pattern, $string, $matches)) {
                 if (count($matches) !== 3) {
                     continue;
                 }
@@ -408,12 +410,31 @@ class DemoData
                             $this->identifiers['sites'][$identifier],
                             $string
                         );
-                        
+
+                        break;
+                    case 'siteurl':
+                        if (!isset($this->identifiers['sites'][$identifier])) {
+                            Log::addDebug('Site Identifier "'.$identifier.'" was not found');
+                            break;
+                        }
+
+                        $siteID = $this->identifiers['sites'][$identifier];
+                        $string = str_replace(
+                            '${siteurl:'.$identifier.'}',
+                            sprintf(
+                                'index.php?id=%d&project=%s&lang=%s',
+                                $siteID,
+                                $this->Project->getName(),
+                                $this->Project->getLang()
+                            ),
+                            $string
+                        );
+
                         break;
                     case 'media':
                         $identifier = trim($identifier);
-                        $identifier = ltrim($identifier,'/ ');
-                        if(!isset($this->identifiers['media'][$identifier])){
+                        $identifier = ltrim($identifier, '/ ');
+                        if (!isset($this->identifiers['media'][$identifier])) {
                             Log::addDebug('Media Identifier "'.$identifier.'" was not found');
                             break;
                         }
