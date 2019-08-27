@@ -1,5 +1,5 @@
-demodata
-========
+
+![Package Logo](bin/img/docs/readme/readme.jpg)
 
 Adds an API to add demodata on project creation.
 
