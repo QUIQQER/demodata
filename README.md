@@ -1,4 +1,3 @@
-
 ![Package Logo](bin/img/docs/readme/readme.jpg)
 
 Adds an API to add demodata on project creation.
@@ -50,6 +49,7 @@ senden Sie bitte eine E-Mail an support@pcsg.de.
 
 Lizenz
 -------
+[GPL 3.0+](http://www.gnu.de/documents/gpl.de.html)
 
 Entwickler
 -------
