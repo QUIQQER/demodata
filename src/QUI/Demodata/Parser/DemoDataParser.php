@@ -33,14 +33,13 @@ class DemoDataParser
         switch ($fileExtension) {
             case 'xml':
                 return $this->parseXML($TemplatePackage);
-                break;
+
             default:
                 throw new UnknownFileFormatException([
                     'quiqqer/demodata',
                     'exception.file.format.extension.unknown'
                 ]);
         }
-
     }
 
     /**
@@ -59,8 +58,9 @@ class DemoDataParser
      */
     protected function parseXML(Package $TemplatePackage)
     {
-        $filePath     = $TemplatePackage->getDir().'demodata.xml';
-        $data         = [];
+        $filePath = $TemplatePackage->getDir().'demodata.xml';
+        $data     = [];
+
         $data['meta'] = [
             'file'     => $filePath,
             'template' => [
@@ -74,5 +74,4 @@ class DemoDataParser
 
         return $data;
     }
-
 }
