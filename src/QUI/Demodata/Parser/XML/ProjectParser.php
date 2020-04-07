@@ -19,8 +19,10 @@ class ProjectParser
 
         $DOM          = XML::getDomFromXml($filePath);
         $projectNodes = $DOM->getElementsByTagName('project');
+
         foreach ($projectNodes as $projectNode) {
             $project = [];
+
             /** @var \DOMNode $childNode */
             foreach ($projectNode->childNodes as $childNode) {
                 if ($childNode->nodeName === 'settings') {
@@ -38,7 +40,7 @@ class ProjectParser
                             $identifier = $siteNode->attributes->getNamedItem('identifier')->nodeValue;
                         } else {
                             // Workaround: Random identifier with microtime.
-                            $identifier = mt_rand(0, 250000).str_replace(' ','',microtime());
+                            $identifier = mt_rand(0, 250000).str_replace(' ', '', microtime());
                         }
 
                         $project['sites'][$identifier] = self::parseSite($siteNode);
@@ -49,8 +51,9 @@ class ProjectParser
                     $project['media'] = self::parseMedia($childNode);
                 }
             }
+
+            $projects[] = $project;
         }
-        $projects[] = $project;
 
         return $projects;
     }
@@ -80,8 +83,9 @@ class ProjectParser
                 continue;
             }
 
-            $settingName            = $SettingNode->attributes->getNamedItem('name')->nodeValue;
-            $settingValue           = $SettingNode->attributes->getNamedItem('value')->nodeValue;
+            $settingName  = $SettingNode->attributes->getNamedItem('name')->nodeValue;
+            $settingValue = $SettingNode->attributes->getNamedItem('value')->nodeValue;
+
             $settings[$settingName] = $settingValue;
         }
 
@@ -139,7 +143,7 @@ class ProjectParser
                         $identifier = $ChildSiteNode->attributes->getNamedItem('identifier')->nodeValue;
                     } else {
                         // Workaround: Random identifier with microtime.
-                        $identifier = mt_rand(0, 250000).str_replace(' ','',microtime());
+                        $identifier = mt_rand(0, 250000).str_replace(' ', '', microtime());
                     }
 
                     $site['children'][$identifier] = self::parseSite($ChildSiteNode);
@@ -147,7 +151,6 @@ class ProjectParser
             }
 
             // Parse Bricks
-
             if ($childNode->nodeName === 'bricks') {
                 $site['bricks'] = [];
                 /** @var \DOMNode $AreaNode */
@@ -195,11 +198,11 @@ class ProjectParser
     }
 
     /**
-     * Parses the media section within a project node. <br />  
-     * If one of the file properites is not defined, an empty string will be used for this property.  <br />  
-     * The following properties are required: 'title' <br />  
-     * Returns an array with all file and their settings with the path within the bin/media directory as array key  
-     * 
+     * Parses the media section within a project node. <br />
+     * If one of the file properites is not defined, an empty string will be used for this property.  <br />
+     * The following properties are required: 'title' <br />
+     * Returns an array with all file and their settings with the path within the bin/media directory as array key
+     *
      * **Returnformat**
      * ```
      * [
@@ -212,7 +215,7 @@ class ProjectParser
      *  ]
      * ]
      * ```
-     * 
+     *
      * @param \DOMNode $MediaNode
      *
      * @return array
@@ -224,9 +227,9 @@ class ProjectParser
         $simpleXML = simplexml_import_dom($MediaNode);
 
         foreach ($simpleXML->file as $fileNode) {
-            $mediaPath = (string)$fileNode->attributes()['path'];
-            $mediaPath = trim($mediaPath,' \t\n\r\0\x0B/');
-            $mediaData  = [
+            $mediaPath         = (string)$fileNode->attributes()['path'];
+            $mediaPath         = trim($mediaPath, ' \t\n\r\0\x0B/');
+            $mediaData         = [
                 'name'        => isset($fileNode->name) ? (string)$fileNode->name : '',
                 'title'       => (string)$fileNode->title,
                 'description' => isset($fileNode->description) ? (string)$fileNode->description : '',

@@ -4,7 +4,6 @@ namespace QUI\Demodata\Parser;
 
 use QUI\Demodata\Exceptions\UnknownFileFormatException;
 use QUI\Demodata\Parser\XML\BricksParser;
-use QUI\Demodata\Parser\XML\MediaParser;
 use QUI\Demodata\Parser\XML\ProjectParser;
 use QUI\Package\Package;
 

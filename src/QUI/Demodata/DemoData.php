@@ -8,9 +8,12 @@ use QUI\Projects\Project;
 use QUI\Projects\Site;
 use QUI\System\Log;
 
+/**
+ * Class DemoData
+ * @package QUI\Demodata
+ */
 class DemoData
 {
-
     protected $identifiers = [
         'sites'  => [],
         'bricks' => [],
@@ -66,15 +69,18 @@ class DemoData
 
         // Set the settings
         $ProjectsConfig = \QUI::getConfig('etc/projects.ini.php');
+
         foreach ($settings as $key => $value) {
             $ProjectsConfig->set($Project->getName(), $key, $value);
         }
+
         $ProjectsConfig->save();
         // Workaround to force the project manager to reload the project data
         unset(\QUI\Projects\Manager::$projects[$Project->getName()]);
 
         if (count($sites) > 0) {
-            $identifier                              = array_keys($sites)[0];
+            $identifier = array_keys($sites)[0];
+
             $this->identifiers['sites'][$identifier] = $this->configureStartpage($Project, reset($sites));
         }
 
@@ -180,6 +186,7 @@ class DemoData
     {
         $BrickManager  = Manager::init();
         $createdBricks = [];
+
         foreach ($bricksData as $brickIdentifier => $brickParams) {
             $Brick   = new Brick($brickParams['attributes']);
             $brickID = $BrickManager->createBrickForProject($Project, $Brick);
@@ -216,6 +223,7 @@ class DemoData
     {
         $BrickManager = Manager::init();
         $siteBricks   = [];
+
         foreach ($bricksData as $areaName => $areaBricks) {
             foreach ($areaBricks as $brickData) {
                 if (!isset($this->identifiers['bricks'][$brickData['identifier']])) {
@@ -235,10 +243,7 @@ class DemoData
             }
         }
 
-        $Site->setAttribute(
-            'quiqqer.bricks.areas',
-            json_encode($siteBricks)
-        );
+        $Site->setAttribute('quiqqer.bricks.areas', json_encode($siteBricks));
         $Site->save(\QUI::getUsers()->getSystemUser());
     }
     #endregion
@@ -257,12 +262,15 @@ class DemoData
          */
         $BrickManager = new Manager();
         $Bricks       = $BrickManager->getBricksFromProject($this->Project);
+
         /** @var Brick $Brick */
         foreach ($Bricks as $Brick) {
             $updatedSettings = [];
+
             foreach ($Brick->getSettings() as $settingName => $settingValue) {
                 $updatedSettings[$settingName] = $this->processPlaceholders($settingValue);
             }
+
             $Brick->setSettings($updatedSettings);
             $BrickManager->saveBrick($Brick->getAttribute('id'), $Brick->getAttributes());
         }
@@ -273,17 +281,22 @@ class DemoData
         /** @var Site\Edit $Site */
         foreach ($this->Project->getSites() as $Site) {
             $siteBricks = json_decode($Site->getAttribute('quiqqer.bricks.areas'), true);
+
             if (empty($siteBricks)) {
                 continue;
             }
+
             $updatedSiteBricks = [];
+
             foreach ($siteBricks as $brickArea => $bricks) {
                 foreach ($bricks as $brickData) {
                     $brickSettings   = json_decode($brickData['customfields'], true);
                     $updatedSettings = [];
+
                     foreach ($brickSettings as $settingName => $settingValue) {
                         $updatedSettings[] = $this->processPlaceholders($settingValue);
                     }
+
                     $brickData['customfields']       = $updatedSettings;
                     $updatedSiteBricks[$brickArea][] = $brickData;
                 }
@@ -302,11 +315,12 @@ class DemoData
 
             foreach ($brickUIDRows as $brickUIDRow) {
                 $customSettings = json_decode($brickUIDRow['customfields'], true);
+
                 foreach ($customSettings as $settingName => $settingValue) {
                     $customSettings[$settingName] = $this->processPlaceholders($settingValue);
                 }
 
-                \QUI::getDataBase()->update(
+                QUI::getDataBase()->update(
                     Manager::getUIDTable(),
                     [
                         'customfields' => json_encode($customSettings)
@@ -329,9 +343,11 @@ class DemoData
         /** @var Site\Edit $Site */
         foreach ($this->Project->getSites() as $Site) {
             $updatedSettings = [];
+
             foreach ($Site->getAttributes() as $attributeName => $attributeValue) {
                 $updatedSettings[$attributeName] = $this->processPlaceholders($attributeValue);
             }
+
             $Site->setAttributes($updatedSettings);
             $Site->save();
         }
@@ -344,13 +360,14 @@ class DemoData
      */
     protected function replacePlaceholdersInProjectSettings()
     {
-
         $ProjectsConfig = \QUI::getConfig('etc/projects.ini.php');
         $settings       = $ProjectsConfig->getSection($this->Project->getName());
+
         foreach ($settings as $key => $value) {
             $value = $this->processPlaceholders($value);
             $ProjectsConfig->set($this->Project->getName(), $key, $value);
         }
+
         $ProjectsConfig->save();
     }
 
@@ -434,6 +451,7 @@ class DemoData
                     case 'media':
                         $identifier = trim($identifier);
                         $identifier = ltrim($identifier, '/ ');
+
                         if (!isset($this->identifiers['media'][$identifier])) {
                             Log::addDebug('Media Identifier "'.$identifier.'" was not found');
                             break;

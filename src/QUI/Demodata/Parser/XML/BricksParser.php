@@ -21,6 +21,7 @@ class BricksParser
         $brickLists = $DOM->getElementsByTagName('bricks');
 
         $brickList = [];
+
         /** @var \DOMNode $brickList */
         foreach ($brickLists as $childNode) {
             if ($childNode->parentNode->nodeName !== 'data') {
@@ -31,17 +32,18 @@ class BricksParser
 
         /** @var \DOMNode $brickNode */
         foreach ($brickList->childNodes as $brickNode) {
-
             if ($brickNode->nodeName !== 'brick') {
                 continue;
             }
 
             $brickAttributes = [];
+
             /** @var \DOMNode $childNode */
             foreach ($brickNode->childNodes as $childNode) {
                 if ($childNode->nodeName !== 'attributes') {
                     continue;
                 }
+
                 /** @var \DOMNode $attributesNode */
                 foreach ($childNode->childNodes as $attributesNode) {
                     if ($attributesNode->nodeName !== 'attribute') {
