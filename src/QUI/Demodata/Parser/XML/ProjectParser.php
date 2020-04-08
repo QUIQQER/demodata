@@ -19,8 +19,10 @@ class ProjectParser
 
         $DOM          = XML::getDomFromXml($filePath);
         $projectNodes = $DOM->getElementsByTagName('project');
+
         foreach ($projectNodes as $projectNode) {
             $project = [];
+
             /** @var \DOMNode $childNode */
             foreach ($projectNode->childNodes as $childNode) {
                 if ($childNode->nodeName === 'settings') {
@@ -28,14 +30,28 @@ class ProjectParser
                 }
 
                 if ($childNode->nodeName === 'sites') {
+                    /** @var \DOMElement $siteNode */
                     foreach ($childNode->childNodes as $siteNode) {
                         if ($siteNode->nodeName !== 'site') {
                             continue;
                         }
-                        $project['sites'][] = self::parseSite($siteNode);
+
+                        if ($siteNode->hasAttribute('identifier')) {
+                            $identifier = $siteNode->attributes->getNamedItem('identifier')->nodeValue;
+                        } else {
+                            // Workaround: Random identifier with microtime.
+                            $identifier = mt_rand(0, 250000).str_replace(' ', '', microtime());
+                        }
+
+                        $project['sites'][$identifier] = self::parseSite($siteNode);
                     }
                 }
+
+                if ($childNode->nodeName === 'media') {
+                    $project['media'] = self::parseMedia($childNode);
+                }
             }
+
             $projects[] = $project;
         }
 
@@ -67,8 +83,9 @@ class ProjectParser
                 continue;
             }
 
-            $settingName            = $SettingNode->attributes->getNamedItem('name')->nodeValue;
-            $settingValue           = $SettingNode->attributes->getNamedItem('value')->nodeValue;
+            $settingName  = $SettingNode->attributes->getNamedItem('name')->nodeValue;
+            $settingValue = $SettingNode->attributes->getNamedItem('value')->nodeValue;
+
             $settings[$settingName] = $settingValue;
         }
 
@@ -116,16 +133,24 @@ class ProjectParser
 
             // Parse Children
             if ($childNode->nodeName === 'children') {
+                /** @var \DOMElement $ChildSiteNode */
                 foreach ($childNode->childNodes as $ChildSiteNode) {
                     if ($ChildSiteNode->nodeName !== 'site') {
                         continue;
                     }
-                    $site['children'][] = self::parseSite($ChildSiteNode);
+
+                    if ($ChildSiteNode->hasAttribute('identifier')) {
+                        $identifier = $ChildSiteNode->attributes->getNamedItem('identifier')->nodeValue;
+                    } else {
+                        // Workaround: Random identifier with microtime.
+                        $identifier = mt_rand(0, 250000).str_replace(' ', '', microtime());
+                    }
+
+                    $site['children'][$identifier] = self::parseSite($ChildSiteNode);
                 }
             }
 
             // Parse Bricks
-
             if ($childNode->nodeName === 'bricks') {
                 $site['bricks'] = [];
                 /** @var \DOMNode $AreaNode */
@@ -157,8 +182,8 @@ class ProjectParser
                                     continue;
                                 }
 
-                                if($AttributeNode->attributes->getNamedItem('name')->nodeValue === 'settings'){
-                                    $brick['settings'] = json_decode($AttributeNode->nodeValue,true);
+                                if ($AttributeNode->attributes->getNamedItem('name')->nodeValue === 'settings') {
+                                    $brick['settings'] = json_decode($AttributeNode->nodeValue, true);
                                 }
                             }
                         }
@@ -170,5 +195,50 @@ class ProjectParser
         }
 
         return $site;
+    }
+
+    /**
+     * Parses the media section within a project node. <br />
+     * If one of the file properites is not defined, an empty string will be used for this property.  <br />
+     * The following properties are required: 'title' <br />
+     * Returns an array with all file and their settings with the path within the bin/media directory as array key
+     *
+     * **Returnformat**
+     * ```
+     * [
+     *  '<path_within_media_dir>' => [
+     *      'name' => '<name>',
+     *      'title' => '<title>',
+     *      'description' => '<description>',
+     *      'alt' => '<alt>',
+     *      'priority' => '<priority>',
+     *  ]
+     * ]
+     * ```
+     *
+     * @param \DOMNode $MediaNode
+     *
+     * @return array
+     */
+    protected static function parseMedia(\DOMNode $MediaNode)
+    {
+        $media = [];
+
+        $simpleXML = simplexml_import_dom($MediaNode);
+
+        foreach ($simpleXML->file as $fileNode) {
+            $mediaPath         = (string)$fileNode->attributes()['path'];
+            $mediaPath         = trim($mediaPath, ' \t\n\r\0\x0B/');
+            $mediaData         = [
+                'name'        => isset($fileNode->name) ? (string)$fileNode->name : '',
+                'title'       => (string)$fileNode->title,
+                'description' => isset($fileNode->description) ? (string)$fileNode->description : '',
+                'alt'         => isset($fileNode->alt) ? (string)$fileNode->alt : '',
+                'priority'    => isset($fileNode->priority) ? (int)$fileNode->priority : 0,
+            ];
+            $media[$mediaPath] = $mediaData;
+        }
+
+        return $media;
     }
 }

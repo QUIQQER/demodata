@@ -5,6 +5,7 @@ namespace QUI\Demodata\Parser;
 use QUI\Demodata\Exceptions\UnknownFileFormatException;
 use QUI\Demodata\Parser\XML\BricksParser;
 use QUI\Demodata\Parser\XML\ProjectParser;
+use QUI\Package\Package;
 
 class DemoDataParser
 {
@@ -18,26 +19,26 @@ class DemoDataParser
      * ]
      * ```
      *
-     * @param $filePath
+     * @param Package $TemplatePackage
      *
      * @return array
      * @throws UnknownFileFormatException
      */
-    public function parse($filePath)
+    public function parse(Package $TemplatePackage)
     {
-        $fileExtension = pathinfo($filePath, PATHINFO_EXTENSION);
+        $demoDataFilePath = $TemplatePackage->getDir().'demodata.xml';
+        $fileExtension    = pathinfo($demoDataFilePath, PATHINFO_EXTENSION);
 
         switch ($fileExtension) {
             case 'xml':
-                return $this->parseXML($filePath);
-                break;
+                return $this->parseXML($TemplatePackage);
+
             default:
                 throw new UnknownFileFormatException([
                     'quiqqer/demodata',
                     'exception.file.format.extension.unknown'
                 ]);
         }
-
     }
 
     /**
@@ -50,18 +51,26 @@ class DemoDataParser
      * ]
      * ```
      *
-     * @param $filePath
+     * @param Package $TemplatePackage
      *
      * @return array
      */
-    protected function parseXML($filePath)
+    protected function parseXML(Package $TemplatePackage)
     {
-        $data = [];
+        $filePath = $TemplatePackage->getDir().'demodata.xml';
+        $data     = [];
+
+        $data['meta'] = [
+            'file'     => $filePath,
+            'template' => [
+                'name' => $TemplatePackage->getName(),
+                'path' => $TemplatePackage->getDir()
+            ]
+        ];
 
         $data['projects'] = ProjectParser::parseProjects($filePath);
         $data['bricks']   = BricksParser::parseBricks($filePath);
 
         return $data;
     }
-
 }
