@@ -35,8 +35,10 @@ class DemoData
     {
         // Create media area
         if (isset($demoDataArray['projects'][0]['media']) && !empty($demoDataArray['projects'][0]['media'])) {
-            $Media                      = new Media();
-            $this->identifiers['media'] = $Media->createMediaArea($Project, $demoDataArray);
+            $Media = new Media();
+            $Media->createMediaArea($Project, $demoDataArray);
+
+            $this->identifiers['media'] = $Media->getIdentifiers();
         }
 
         if (isset($demoDataArray['bricks'])) {
@@ -398,7 +400,7 @@ class DemoData
 
         foreach ($placeholderPattern as $pattern) {
             preg_match($pattern, $string, $matches);
-            
+
             if (count($matches) !== 3) {
                 continue;
             }
