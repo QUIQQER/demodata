@@ -227,15 +227,21 @@ class ProjectParser
         $simpleXML = simplexml_import_dom($MediaNode);
 
         foreach ($simpleXML->file as $fileNode) {
-            $mediaPath         = (string)$fileNode->attributes()['path'];
-            $mediaPath         = trim($mediaPath, ' \t\n\r\0\x0B/');
-            $mediaData         = [
+            $mediaPath = (string)$fileNode->attributes()['path'];
+            $mediaPath = trim($mediaPath, ' \t\n\r\0\x0B/');
+
+            $identifier = (string)$fileNode->attributes()['identifier'];
+            $identifier = trim($identifier, ' \t\n\r\0\x0B/');
+
+            $mediaData = [
                 'name'        => isset($fileNode->name) ? (string)$fileNode->name : '',
                 'title'       => (string)$fileNode->title,
                 'description' => isset($fileNode->description) ? (string)$fileNode->description : '',
                 'alt'         => isset($fileNode->alt) ? (string)$fileNode->alt : '',
                 'priority'    => isset($fileNode->priority) ? (int)$fileNode->priority : 0,
+                'identifier'  => $identifier
             ];
+
             $media[$mediaPath] = $mediaData;
         }
 
