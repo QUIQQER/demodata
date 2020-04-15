@@ -5,8 +5,14 @@ namespace QUI\Demodata\Parser;
 use QUI\Demodata\Exceptions\UnknownFileFormatException;
 use QUI\Demodata\Parser\XML\BricksParser;
 use QUI\Demodata\Parser\XML\ProjectParser;
+use QUI\Demodata\Parser\XML\EventParser;
+use QUI\Events\Event;
 use QUI\Package\Package;
 
+/**
+ * Class DemoDataParser
+ * @package QUI\Demodata\Parser
+ */
 class DemoDataParser
 {
     /**
@@ -70,6 +76,7 @@ class DemoDataParser
 
         $data['projects'] = ProjectParser::parseProjects($filePath);
         $data['bricks']   = BricksParser::parseBricks($filePath);
+        $data['events']   = EventParser::parseEvents($filePath);
 
         return $data;
     }
