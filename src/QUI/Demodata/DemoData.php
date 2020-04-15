@@ -4,6 +4,7 @@ namespace QUI\Demodata;
 
 use QUI\Bricks\Brick;
 use QUI\Bricks\Manager;
+use QUI\Events\Event;
 use QUI\Projects\Project;
 use QUI\Projects\Site;
 use QUI\System\Log;
@@ -22,6 +23,15 @@ class DemoData
 
     /** @var Project */
     protected $Project;
+    public $Events;
+
+    /**
+     * DemoDataParser constructor.
+     */
+    public function __construct()
+    {
+        $this->Events = new Event();
+    }
 
     /**
      * Applies the given demodata to the project
@@ -33,6 +43,17 @@ class DemoData
      */
     public function apply(Project $Project, $demoDataArray)
     {
+        // import events
+        if (isset($demoDataArray['events'])) {
+            $events = $demoDataArray['events'];
+
+            foreach ($events as $event => $callbacks) {
+                foreach ($callbacks as $callback) {
+                    $this->Events->addEvent($event, $callback);
+                }
+            }
+        }
+
         // Create media area
         if (isset($demoDataArray['projects'][0]['media']) && !empty($demoDataArray['projects'][0]['media'])) {
             $Media = new Media();
@@ -53,6 +74,8 @@ class DemoData
         $this->replacePlaceholdersInBrickSettings();
         $this->replacePlaceholdersInSiteSettings();
         $this->replacePlaceholdersInProjectSettings();
+
+        $this->Events->fireEvent('finish', [$this, $Project]);
     }
 
     /**
