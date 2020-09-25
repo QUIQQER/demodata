@@ -33,7 +33,7 @@ class DemoDataParser
     public function parse(Package $TemplatePackage)
     {
         $demoDataFilePath = $TemplatePackage->getDir().'demodata.xml';
-        $fileExtension    = pathinfo($demoDataFilePath, PATHINFO_EXTENSION);
+        $fileExtension    = \pathinfo($demoDataFilePath, PATHINFO_EXTENSION);
 
         switch ($fileExtension) {
             case 'xml':

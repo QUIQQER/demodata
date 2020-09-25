@@ -4,9 +4,11 @@ namespace QUI\Demodata\Parser\XML;
 
 use QUI\Utils\Text\XML;
 
+/**
+ * Class BricksParser
+ */
 class BricksParser
 {
-
     /**
      * Parses the bricks from the given XML file
      *
@@ -19,14 +21,14 @@ class BricksParser
         $bricks     = [];
         $DOM        = XML::getDomFromXml($filePath);
         $brickLists = $DOM->getElementsByTagName('bricks');
-
-        $brickList = [];
+        $brickList  = [];
 
         /** @var \DOMNode $brickList */
         foreach ($brickLists as $childNode) {
             if ($childNode->parentNode->nodeName !== 'data') {
                 continue;
             }
+
             $brickList = $childNode;
         }
 
@@ -50,20 +52,19 @@ class BricksParser
                         continue;
                     }
 
-                    $name  = trim($attributesNode->attributes->getNamedItem('name')->nodeValue);
-                    $value = trim($attributesNode->nodeValue);
+                    $name  = \trim($attributesNode->attributes->getNamedItem('name')->nodeValue);
+                    $value = \trim($attributesNode->nodeValue);
 
                     if ($name === 'settings') {
-                        $brickAttributes['settings'] = json_decode($value, true);
+                        $brickAttributes['settings'] = \json_decode($value, true);
                         continue;
                     }
 
                     $brickAttributes['attributes'][$name] = $value;
-
                 }
             }
 
-            $identifier = $brickNode->attributes->getNamedItem('identifier')->nodeValue;
+            $identifier          = $brickNode->attributes->getNamedItem('identifier')->nodeValue;
             $bricks[$identifier] = $brickAttributes;
         }
 

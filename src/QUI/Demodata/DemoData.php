@@ -103,10 +103,10 @@ class DemoData
         // Workaround to force the project manager to reload the project data
         unset(\QUI\Projects\Manager::$projects[$Project->getName()]);
 
-        if (count($sites) > 0) {
-            $identifier = array_keys($sites)[0];
+        if (\count($sites) > 0) {
+            $identifier = \array_keys($sites)[0];
 
-            $this->identifiers['sites'][$identifier] = $this->configureStartpage($Project, reset($sites));
+            $this->identifiers['sites'][$identifier] = $this->configureStartpage($Project, \reset($sites));
         }
 
         $this->Project = $Project;
@@ -228,7 +228,7 @@ class DemoData
             // Set the bricks settings
             $Brick->setSettings($brickParams['settings']);
 
-            $brickParams['customfields'] = json_decode($brickParams['attributes']['customfields'], true);
+            $brickParams['customfields'] = \json_decode($brickParams['attributes']['customfields'], true);
             $BrickManager->saveBrick($brickID, $brickParams);
             $createdBricks[$brickIdentifier] = $brickID;
         }
@@ -257,7 +257,7 @@ class DemoData
 
                 $quiBrickData = [
                     'brickId'      => $this->identifiers['bricks'][$brickData['identifier']],
-                    'customfields' => json_encode($brickData['settings']),
+                    'customfields' => \json_encode($brickData['settings']),
                     'uid'          => ''
                 ];
 
@@ -268,7 +268,7 @@ class DemoData
             }
         }
 
-        $Site->setAttribute('quiqqer.bricks.areas', json_encode($siteBricks));
+        $Site->setAttribute('quiqqer.bricks.areas', \json_encode($siteBricks));
         $Site->save(\QUI::getUsers()->getSystemUser());
     }
     #endregion
@@ -305,7 +305,7 @@ class DemoData
          */
         /** @var Site\Edit $Site */
         foreach ($this->Project->getSites() as $Site) {
-            $siteBricks = json_decode($Site->getAttribute('quiqqer.bricks.areas'), true);
+            $siteBricks = \json_decode($Site->getAttribute('quiqqer.bricks.areas'), true);
 
             if (empty($siteBricks)) {
                 continue;
@@ -315,7 +315,7 @@ class DemoData
 
             foreach ($siteBricks as $brickArea => $bricks) {
                 foreach ($bricks as $brickData) {
-                    $brickSettings   = json_decode($brickData['customfields'], true);
+                    $brickSettings   = \json_decode($brickData['customfields'], true);
                     $updatedSettings = [];
 
                     foreach ($brickSettings as $settingName => $settingValue) {
@@ -339,7 +339,7 @@ class DemoData
             ]);
 
             foreach ($brickUIDRows as $brickUIDRow) {
-                $customSettings = json_decode($brickUIDRow['customfields'], true);
+                $customSettings = \json_decode($brickUIDRow['customfields'], true);
 
                 foreach ($customSettings as $settingName => $settingValue) {
                     $customSettings[$settingName] = $this->processPlaceholders($settingValue);
@@ -347,11 +347,8 @@ class DemoData
 
                 \QUI::getDataBase()->update(
                     Manager::getUIDTable(),
-                    [
-                        'customfields' => json_encode($customSettings)
-                    ], [
-                        'uid' => $brickUIDRow['uid']
-                    ]
+                    ['customfields' => \json_encode($customSettings)],
+                    ['uid' => $brickUIDRow['uid']]
                 );
             }
 
@@ -417,14 +414,14 @@ class DemoData
             '/.*\$\{(media):([a-zA-Z0-9\.\-_\/\\\\]+)\}.*/',
         ];
 
-        if (is_array($string)) {
-            $string = json_encode($string);
+        if (\is_array($string)) {
+            $string = \json_encode($string);
         }
 
         foreach ($placeholderPattern as $pattern) {
-            preg_match($pattern, $string, $matches);
+            \preg_match($pattern, $string, $matches);
 
-            if (count($matches) !== 3) {
+            if (\count($matches) !== 3) {
                 continue;
             }
 
@@ -438,7 +435,7 @@ class DemoData
                         break;
                     }
 
-                    $string = str_replace(
+                    $string = \str_replace(
                         '${site.'.$identifier.'}',
                         $this->identifiers['sites'][$identifier],
                         $string
@@ -451,7 +448,7 @@ class DemoData
                         break;
                     }
 
-                    $string = str_replace(
+                    $string = \str_replace(
                         '${site:'.$identifier.'}',
                         $this->identifiers['sites'][$identifier],
                         $string
@@ -465,9 +462,9 @@ class DemoData
                     }
 
                     $siteID = $this->identifiers['sites'][$identifier];
-                    $string = str_replace(
+                    $string = \str_replace(
                         '${siteurl:'.$identifier.'}',
-                        sprintf(
+                        \sprintf(
                             'index.php?id=%d&project=%s&lang=%s',
                             $siteID,
                             $this->Project->getName(),
@@ -478,15 +475,15 @@ class DemoData
                     break;
 
                 case 'media':
-                    $identifier = trim($identifier);
-                    $identifier = ltrim($identifier, '/ ');
+                    $identifier = \trim($identifier);
+                    $identifier = \ltrim($identifier, '/ ');
 
                     if (!isset($this->identifiers['media'][$identifier])) {
                         Log::addDebug('Media Identifier "'.$identifier.'" was not found');
                         break;
                     }
 
-                    $string = str_replace(
+                    $string = \str_replace(
                         '${media:'.$identifier.'}',
                         'image.php?id='.$this->identifiers['media'][$identifier].'&project='.$this->Project->getName(),
                         $string
