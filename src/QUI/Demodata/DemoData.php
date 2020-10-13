@@ -290,14 +290,24 @@ class DemoData
 
         /** @var Brick $Brick */
         foreach ($Bricks as $Brick) {
-            $updatedSettings = [];
+            $updatedSettings   = [];
+            $updatedAttributes = [];
 
             foreach ($Brick->getSettings() as $settingName => $settingValue) {
                 $updatedSettings[$settingName] = $this->processPlaceholders($settingValue);
             }
 
+            foreach ($Brick->getAttributes() as $settingName => $settingValue) {
+                $updatedAttributes[$settingName] = $this->processPlaceholders($settingValue);
+            }
+
             $Brick->setSettings($updatedSettings);
-            $BrickManager->saveBrick($Brick->getAttribute('id'), $Brick->getAttributes());
+            $Brick->setAttributes($updatedAttributes);
+
+            $BrickManager->saveBrick(
+                $Brick->getAttribute('id'),
+                $Brick->getAttributes()
+            );
         }
 
         /*
@@ -358,7 +368,7 @@ class DemoData
     }
 
     /**
-     * Replaces all palceholders within all sites settings
+     * Replaces all placeholders within all sites settings
      */
     protected function replacePlaceholdersInSiteSettings()
     {

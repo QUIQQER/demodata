@@ -86,6 +86,13 @@ class Media
 
             if (is_dir($fullPath)) {
                 $SubFolder = $MediaBaseFolder->createFolder($entity);
+
+                if (isset($this->mediaSection[$entity .'/']['identifier'])) {
+                    $ident = $this->mediaSection[$entity .'/']['identifier'];
+
+                    $this->identifiers[$ident] = $SubFolder->getId();
+                }
+
                 $this->createMediaInFolder($fullPath, $SubFolder);
                 continue;
             }
