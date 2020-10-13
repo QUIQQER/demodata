@@ -228,10 +228,10 @@ class ProjectParser
 
         foreach ($simpleXML->file as $fileNode) {
             $mediaPath = (string)$fileNode->attributes()['path'];
-            $mediaPath = trim($mediaPath, ' \t\n\r\0\x0B/');
+            $mediaPath = trim($mediaPath);
 
             $identifier = (string)$fileNode->attributes()['identifier'];
-            $identifier = trim($identifier, ' \t\n\r\0\x0B/');
+            $identifier = trim($identifier);
 
             $mediaData = [
                 'name'        => isset($fileNode->name) ? (string)$fileNode->name : '',

@@ -358,7 +358,7 @@ class DemoData
     }
 
     /**
-     * Replaces all palceholders within all sites settings
+     * Replaces all placeholders within all sites settings
      */
     protected function replacePlaceholdersInSiteSettings()
     {
