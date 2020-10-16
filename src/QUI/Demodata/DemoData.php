@@ -261,10 +261,8 @@ class DemoData
                     'uid'          => ''
                 ];
 
-                $brickUid = $BrickManager->createUniqueSiteBrick($Site, $quiBrickData);
-
-                $quiBrickData['customfields'] = \json_encode($quiBrickData['customfields']); // workaround quiqqer/demodata#16
-                $quiBrickData['uid']          = $brickUid;
+                $brickUid            = $BrickManager->createUniqueSiteBrick($Site, $quiBrickData);
+                $quiBrickData['uid'] = $brickUid;
 
                 $siteBricks[$areaName][] = $quiBrickData;
             }
@@ -334,7 +332,7 @@ class DemoData
                         $updatedSettings[$settingName] = $this->processPlaceholders($settingValue);
                     }
 
-                    $brickData['customfields']       = $updatedSettings;
+                    $brickData['customfields']       = \json_encode($updatedSettings);
                     $updatedSiteBricks[$brickArea][] = $brickData;
                 }
             }
