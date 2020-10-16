@@ -332,7 +332,7 @@ class DemoData
                         $updatedSettings[$settingName] = $this->processPlaceholders($settingValue);
                     }
 
-                    $brickData['customfields']       = $updatedSettings;
+                    $brickData['customfields']       = \json_encode($updatedSettings);
                     $updatedSiteBricks[$brickArea][] = $brickData;
                 }
             }
