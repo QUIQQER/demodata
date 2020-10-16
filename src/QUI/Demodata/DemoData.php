@@ -182,6 +182,7 @@ class DemoData
             foreach ($siteData['attributes'] as $attribute => $value) {
                 $Site->setAttribute($attribute, $value);
             }
+            $Site->unlockWithRights(); //workaround
             $Site->save(\QUI::getUsers()->getSystemUser());
         }
 
@@ -433,80 +434,92 @@ class DemoData
         }
 
         foreach ($placeholderPattern as $pattern) {
-            \preg_match($pattern, $string, $matches);
-
-            if (\count($matches) !== 3) {
-                continue;
-            }
-
-            $type       = $matches[1];
-            $identifier = $matches[2];
-
-            switch ($type) {
-                case 'site.':
-                    if (!isset($this->identifiers['sites'][$identifier])) {
-                        Log::addDebug('Site Identifier "'.$identifier.'" was not found');
-                        break;
-                    }
-
-                    $string = \str_replace(
-                        '${site.'.$identifier.'}',
-                        $this->identifiers['sites'][$identifier],
-                        $string
-                    );
-                    break;
-
-                case 'site':
-                    if (!isset($this->identifiers['sites'][$identifier])) {
-                        Log::addDebug('Site Identifier "'.$identifier.'" was not found');
-                        break;
-                    }
-
-                    $string = \str_replace(
-                        '${site:'.$identifier.'}',
-                        $this->identifiers['sites'][$identifier],
-                        $string
-                    );
-                    break;
-
-                case 'siteurl':
-                    if (!isset($this->identifiers['sites'][$identifier])) {
-                        Log::addDebug('Site Identifier "'.$identifier.'" was not found');
-                        break;
-                    }
-
-                    $siteID = $this->identifiers['sites'][$identifier];
-                    $string = \str_replace(
-                        '${siteurl:'.$identifier.'}',
-                        \sprintf(
-                            'index.php?id=%d&project=%s&lang=%s',
-                            $siteID,
-                            $this->Project->getName(),
-                            $this->Project->getLang()
-                        ),
-                        $string
-                    );
-                    break;
-
-                case 'media':
-                    $identifier = \trim($identifier);
-                    $identifier = \ltrim($identifier, '/ ');
-
-                    if (!isset($this->identifiers['media'][$identifier])) {
-                        Log::addDebug('Media Identifier "'.$identifier.'" was not found');
-                        break;
-                    }
-
-                    $string = \str_replace(
-                        '${media:'.$identifier.'}',
-                        'image.php?id='.$this->identifiers['media'][$identifier].'&project='.$this->Project->getName(),
-                        $string
-                    );
-                    break;
-            }
+            $string = $this->parsePlaceholders($pattern, $string);
         }
 
         return $string;
+    }
+
+    /**
+     * @param $pattern
+     * @param $string
+     * @return mixed
+     */
+    protected function parsePlaceholders($pattern, $string)
+    {
+        \preg_match($pattern, $string, $matches);
+
+        if (\count($matches) !== 3) {
+            return $string;
+        }
+
+        $type       = $matches[1];
+        $identifier = $matches[2];
+
+        switch ($type) {
+            case 'site.':
+                if (!isset($this->identifiers['sites'][$identifier])) {
+                    Log::addDebug('Site Identifier "'.$identifier.'" was not found');
+                    break;
+                }
+
+                $string = \str_replace(
+                    '${site.'.$identifier.'}',
+                    $this->identifiers['sites'][$identifier],
+                    $string
+                );
+                break;
+
+            case 'site':
+                if (!isset($this->identifiers['sites'][$identifier])) {
+                    Log::addDebug('Site Identifier "'.$identifier.'" was not found');
+                    break;
+                }
+
+                $string = \str_replace(
+                    '${site:'.$identifier.'}',
+                    $this->identifiers['sites'][$identifier],
+                    $string
+                );
+                break;
+
+            case 'siteurl':
+                if (!isset($this->identifiers['sites'][$identifier])) {
+                    Log::addDebug('Site Identifier "'.$identifier.'" was not found');
+                    break;
+                }
+
+                $siteID = $this->identifiers['sites'][$identifier];
+                $string = \str_replace(
+                    '${siteurl:'.$identifier.'}',
+                    \sprintf(
+                        'index.php?id=%d&project=%s&lang=%s',
+                        $siteID,
+                        $this->Project->getName(),
+                        $this->Project->getLang()
+                    ),
+                    $string
+                );
+                break;
+
+            case 'media':
+                $identifier = \trim($identifier);
+                $identifier = \ltrim($identifier, '/ ');
+
+                if (!isset($this->identifiers['media'][$identifier])) {
+                    Log::addDebug('Media Identifier "'.$identifier.'" was not found');
+                    break;
+                }
+
+                $string = \str_replace(
+                    '${media:'.$identifier.'}',
+                    'image.php?id='.$this->identifiers['media'][$identifier].'&project='.$this->Project->getName(),
+                    $string
+                );
+                break;
+        }
+
+        return $this->parsePlaceholders($pattern, $string);
     }
     #endregion
 }
