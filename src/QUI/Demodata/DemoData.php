@@ -264,7 +264,8 @@ class DemoData
                 $brickUid            = $BrickManager->createUniqueSiteBrick($Site, $quiBrickData);
                 $quiBrickData['uid'] = $brickUid;
 
-                $siteBricks[$areaName][] = $quiBrickData;
+                $quiBrickData['customfields'] = \json_encode($quiBrickData['customfields']); // workaround
+                $siteBricks[$areaName][]      = $quiBrickData;
             }
         }
 
