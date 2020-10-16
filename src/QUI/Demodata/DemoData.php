@@ -329,7 +329,7 @@ class DemoData
                     $updatedSettings = [];
 
                     foreach ($brickSettings as $settingName => $settingValue) {
-                        $updatedSettings[] = $this->processPlaceholders($settingValue);
+                        $updatedSettings[$settingName] = $this->processPlaceholders($settingValue);
                     }
 
                     $brickData['customfields']       = $updatedSettings;
@@ -414,6 +414,10 @@ class DemoData
     protected function processPlaceholders($string)
     {
         if (empty($string)) {
+            return $string;
+        }
+
+        if (is_bool($string)) {
             return $string;
         }
 
