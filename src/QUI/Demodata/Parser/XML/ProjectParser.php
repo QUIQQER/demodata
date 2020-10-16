@@ -40,7 +40,7 @@ class ProjectParser
                             $identifier = $siteNode->attributes->getNamedItem('identifier')->nodeValue;
                         } else {
                             // Workaround: Random identifier with microtime.
-                            $identifier = mt_rand(0, 250000).str_replace(' ', '', microtime());
+                            $identifier = \mt_rand(0, 250000).\str_replace(' ', '', \microtime());
                         }
 
                         $project['sites'][$identifier] = self::parseSite($siteNode);
