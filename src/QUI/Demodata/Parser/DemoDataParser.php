@@ -8,6 +8,7 @@ use QUI\Demodata\Parser\XML\ProjectParser;
 use QUI\Demodata\Parser\XML\EventParser;
 use QUI\Events\Event;
 use QUI\Package\Package;
+use QUI\Utils\Project;
 
 /**
  * Class DemoDataParser
@@ -26,18 +27,19 @@ class DemoDataParser
      * ```
      *
      * @param Package $TemplatePackage
+     * @param \QUI\Projects\Project $Project
      *
      * @return array
      * @throws UnknownFileFormatException
      */
-    public function parse(Package $TemplatePackage)
+    public function parse(Package $TemplatePackage, \QUI\Projects\Project $Project)
     {
         $demoDataFilePath = $TemplatePackage->getDir().'demodata.xml';
         $fileExtension    = \pathinfo($demoDataFilePath, PATHINFO_EXTENSION);
 
         switch ($fileExtension) {
             case 'xml':
-                return $this->parseXML($TemplatePackage);
+                return $this->parseXML($TemplatePackage, $Project);
 
             default:
                 throw new UnknownFileFormatException([
@@ -61,10 +63,15 @@ class DemoDataParser
      *
      * @return array
      */
-    protected function parseXML(Package $TemplatePackage)
+    protected function parseXML(Package $TemplatePackage, \QUI\Projects\Project $Project)
     {
-        $filePath = $TemplatePackage->getDir().'demodata.xml';
-        $data     = [];
+        $filePath     = $TemplatePackage->getDir().'demodata.xml';
+        $langFilePath = $TemplatePackage->getDir().'demodata_'.$Project->getLang().'.xml';
+        $data         = [];
+
+        if (file_exists($langFilePath)) {
+            $filePath = $langFilePath;
+        }
 
         $data['meta'] = [
             'file'     => $filePath,
